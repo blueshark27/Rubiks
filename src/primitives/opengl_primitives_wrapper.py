@@ -1,4 +1,5 @@
 from OpenGL.GL import *
+import numpy as np
 
 from src.primitives.base_scene_object import BaseSceneObject
 
@@ -7,6 +8,17 @@ class OpenGLPrimitivesWrapper:
         self.object = object
 
     def draw(self):
+        # Get world transformation matrix
+        world_matrix = self.object.get_world_transform()
+
+        # Push current matrix onto stack
+        glPushMatrix()
+
+        # Apply world transformation
+        # OpenGL expects column-major, NumPy is row-major, so transpose
+        glMultMatrixf(world_matrix.T.astype(np.float32).flatten())
+
+        # Now draw all primitives
         p = self.object.get_mesh_primitives()
         v = self.object.get_vertices()
         n = self.object.get_normals()
@@ -29,3 +41,6 @@ class OpenGLPrimitivesWrapper:
                 glEnd()
             else:
                 raise ValueError(f"Unsupported mesh primitive type: {mesh.name}")
+
+        # Pop matrix to restore previous state
+        glPopMatrix()

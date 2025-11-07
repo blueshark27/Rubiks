@@ -3,24 +3,24 @@ from typing import List, Optional
 
 from src.datatypes.pose import Pose
 from src.datatypes.scaling import Scaling
-from src.primitives.base_scene_object import MeshPrimitive, SceneObject
+from src.primitives.base_scene_object import MeshPrimitive, BaseSceneObject
 
 
-class Cone(SceneObject):
+class Cone(BaseSceneObject):
     def __init__(self,
                  pose: Pose,
-                 scaling: Scaling = Scaling(1.0, 1.0, 1.0),
                  radius: float = 1.0,
                  height: float = 1.0,
                  num_segments: int = 20,
+                 scaling: Optional[Scaling] = None,
                  name: str = "Cone",
-                 parent: Optional[SceneObject] = None):
-        super().__init__(scaling=scaling, name=name, pose=pose)
+                 parent: Optional['Cone'] = None):
+        if scaling is None:
+            scaling = Scaling(x=1.0, y=1.0, z=1.0)
+        super().__init__(name=name, pose=pose, scaling=scaling, parent=parent)
         self.radius = radius
         self.height = height
         self.num_segments = num_segments
-        self.parent = parent
-        self.children = []
         self.mesh_primitives = list()
         self.vertices = list()
         self.normals = list()
@@ -58,21 +58,6 @@ class Cone(SceneObject):
         self.normals.append(v_side)
 
     def get_type(self) -> str:
-        pass
-
-    def get_parent(self):
-        pass
-
-    def set_parent(self, parent):
-        pass
-
-    def get_children(self) -> List:
-        pass
-
-    def add_child(self, child):
-        pass
-
-    def remove_child(self, child):
         pass
 
     def get_vertices(self) -> List[List[float]]:

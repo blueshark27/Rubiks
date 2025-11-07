@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from typing import List
 from enum import Enum
+import numpy as np
 
 from src.datatypes.scaling import Scaling
 from src.scene_object import SceneObject
@@ -30,6 +31,26 @@ class BaseSceneObject(SceneObject):
 
     def set_scaling(self, scaling: Scaling):
         self.scaling = scaling
+        self.mark_transform_dirty()
+
+    def get_local_transform(self) -> np.ndarray:
+        """
+        Get the local transformation matrix (pose + scaling).
+        Overrides SceneObject to include scaling.
+        Uses caching to avoid unnecessary recalculation.
+
+        Returns:
+            4x4 local transformation matrix
+        """
+        if self._local_transform_dirty:
+            from src.datatypes import transform
+            self._local_transform_cache = transform.pose_to_matrix(
+                self.pose,
+                self.scaling
+            )
+            self._local_transform_dirty = False
+
+        return self._local_transform_cache
 
     @abstractmethod
     def get_vertices(self) -> List[List[float]]:

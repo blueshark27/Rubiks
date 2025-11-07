@@ -18,11 +18,9 @@ class Sphere(BaseSceneObject):
                  parent: Optional['Sphere'] = None):
         if scaling is None:
             scaling = Scaling(x=1.0, y=1.0, z=1.0)
-        super().__init__(name=name, pose=pose, scaling=scaling)
+        super().__init__(name=name, pose=pose, scaling=scaling, parent=parent)
         self.radius = radius
         self.subdivision = subdivision
-        self.parent = parent
-        self.children = []
         self.mesh_primitives = list()
         self.__vertices = list()
         self.__triangles = list()
@@ -102,21 +100,6 @@ class Sphere(BaseSceneObject):
 
 
     def get_type(self) -> str:
-        pass
-
-    def get_parent(self):
-        pass
-
-    def set_parent(self, parent):
-        pass
-
-    def get_children(self) -> List:
-        pass
-
-    def add_child(self, child):
-        pass
-
-    def remove_child(self, child):
         pass
 
     def get_vertices(self) -> List[List[float]]:
