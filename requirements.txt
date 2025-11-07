@@ -1,3 +1,6 @@
 numpy
+numpydantic
+pydantic
 PyOpenGL
 PyOpenGL_accelerate
+glfw
