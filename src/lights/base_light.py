@@ -13,12 +13,12 @@ class LightPrimitive(Enum):
 
 class BaseLight(SceneObject):
 
-    def __init__(self, light_type: LightPrimitive, pose: Pose, **options):
+    def __init__(self, light_type: LightPrimitive, pose: Pose, name: str = "Light", **options):
+        super().__init__(name=name, pose=pose)
         self.__options = {}
         self.__options_v = {}
         for o_name in options:
             self.__options[o_name] = options[o_name]
-        self.pose = pose
         self.light_type = light_type
 
     def get_options(self) -> Dict:

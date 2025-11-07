@@ -19,35 +19,25 @@ class Spotlight(BaseLight):
         self.diffuse = diffuse
         self.spot_cutoff = spot_cutoff
         self.spot_exponent = spot_exponent
-        self.pose = pose
-        self.name = name
 
         super().__init__(light_type = light_type,
                          pose = pose,
+                         name = name,
                          diffuse = self.diffuse,
                          spot_cutoff = self.spot_cutoff,
                          spot_exponent = self.spot_exponent)
 
-    def get_pose(self) -> Pose:
-        pass
-
-    def set_pose(self, pose: Pose):
-        pass
-
-    def get_name(self) -> str:
-        pass
-
     def get_type(self) -> str:
-        pass
+        return "SPOTLIGHT"
 
     def get_parent(self):
-        pass
+        return None
 
     def set_parent(self, parent):
         pass
 
     def get_children(self) -> List:
-        pass
+        return []
 
     def add_child(self, child):
         pass
