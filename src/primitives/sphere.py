@@ -2,19 +2,23 @@ import math
 from typing import List, Optional
 
 from src.datatypes.pose import Pose
-from src.primitives.base_scene_object import MeshPrimitive, SceneObject
+from src.datatypes.scaling import Scaling
+from src.primitives.base_scene_object import MeshPrimitive, BaseSceneObject
 
 # This is a Python implementation of an icosphere, which is a type of sphere made up of triangles.
 # https://www.songho.ca/opengl/gl_sphere.html#icosphere
 
-class Sphere(SceneObject):
+class Sphere(BaseSceneObject):
     def __init__(self,
                  pose: Pose,
                  radius: float = 1.0,
                  subdivision: int = 3,
+                 scaling: Optional[Scaling] = None,
                  name: str = "Sphere",
-                 parent: Optional[SceneObject] = None):
-        super().__init__(name=name, pose=pose)
+                 parent: Optional['Sphere'] = None):
+        if scaling is None:
+            scaling = Scaling(x=1.0, y=1.0, z=1.0)
+        super().__init__(name=name, pose=pose, scaling=scaling)
         self.radius = radius
         self.subdivision = subdivision
         self.parent = parent
@@ -92,8 +96,9 @@ class Sphere(SceneObject):
         for tri in self.__triangles:
             for idx in tri:
                 normal = self.__vertices[idx]
+                vertex = [coord * self.radius for coord in normal]
                 self.normals[0].append(normal)
-                self.vertices[0].append(normal)
+                self.vertices[0].append(vertex)
 
 
     def get_type(self) -> str:
