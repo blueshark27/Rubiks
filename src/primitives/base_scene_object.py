@@ -1,9 +1,10 @@
 from abc import abstractmethod
-from typing import List
+from typing import List, Optional
 from enum import Enum
 import numpy as np
 
 from src.datatypes.scaling import Scaling
+from src.datatypes.material import Material
 from src.scene_object import SceneObject
 
 
@@ -22,9 +23,28 @@ class MeshPrimitive(Enum):
 
 class BaseSceneObject(SceneObject):
 
-    def __init__(self, scaling: Scaling, *args, **kwargs):
+    def __init__(self, scaling: Scaling, material: Optional[Material] = None,
+                 color: Optional[List[float]] = None, *args, **kwargs):
+        """
+        Initialize base scene object with scaling and material.
+
+        Args:
+            scaling: Scaling information
+            material: Material for the object (optional)
+            color: Convenience parameter - creates a Material from this color (optional)
+                   If both material and color are provided, material takes precedence
+            *args, **kwargs: Arguments passed to parent SceneObject
+        """
         super().__init__(*args, **kwargs)
         self.scaling = scaling
+
+        # Handle material/color initialization
+        if material is not None:
+            self.material = material
+        elif color is not None:
+            self.material = Material.from_color(color)
+        else:
+            self.material = Material.default()
 
     def get_scaling(self) -> Scaling:
         return self.scaling
@@ -32,6 +52,30 @@ class BaseSceneObject(SceneObject):
     def set_scaling(self, scaling: Scaling):
         self.scaling = scaling
         self.mark_transform_dirty()
+
+    def get_material(self) -> Material:
+        """Get the material for this object"""
+        return self.material
+
+    def set_material(self, material: Material):
+        """
+        Set the material for this object.
+
+        Args:
+            material: New material to apply
+        """
+        self.material = material
+
+    def set_color(self, color: List[float]):
+        """
+        Convenience method to set the object's color.
+
+        This updates the material's diffuse and ambient colors.
+
+        Args:
+            color: RGBA color [r, g, b, a] where each component is in [0, 1]
+        """
+        self.material.set_color(color)
 
     def get_local_transform(self) -> np.ndarray:
         """

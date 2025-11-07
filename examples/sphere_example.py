@@ -6,6 +6,7 @@ from OpenGL.GLU import *
 from src.primitives.sphere import Sphere
 from src.primitives.opengl_primitives_wrapper import OpenGLPrimitivesWrapper
 from src.datatypes.pose import Pose
+from src.datatypes.material import MaterialPresets
 from src.lights.spotlight import Spotlight
 from src.lights.opengl_light_wrapper import OpenGLLightWrapper
 from src.lights.base_light import LightPrimitive
@@ -26,9 +27,10 @@ def main():
     # Create window and OpenGL context FIRST
     window = init_window(800, 600, "Sphere example")
 
-    # Now we can create the sphere and configure OpenGL
+    # Now we can create the sphere with a material and configure OpenGL
     pose = Pose(translation=np.array([[0], [0], [0]]), rotation=np.array([[0], [0], [1]]))
-    glWrapper = OpenGLPrimitivesWrapper(Sphere(pose=pose, radius=1.0))
+    # Use a silver material preset for a metallic appearance
+    glWrapper = OpenGLPrimitivesWrapper(Sphere(pose=pose, radius=1.0, material=MaterialPresets.silver()))
 
     # Create and setup spotlight
     # Rotation uses axis-angle representation: axis * angle (in radians)
@@ -51,17 +53,12 @@ def main():
     glEnable(GL_DEPTH_TEST)
     glShadeModel(GL_SMOOTH)
     glEnable(GL_NORMALIZE)
-    glEnable(GL_COLOR_MATERIAL)
-    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
 
     # Setup the light
     lightWrapper.setup_lighting()
 
-    # Set material properties for the sphere
-    glMaterialfv(GL_FRONT, GL_AMBIENT, [0.2, 0.2, 0.2, 1.0])
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
-    glMaterialfv(GL_FRONT, GL_SPECULAR, [1.0, 1.0, 1.0, 1.0])
-    glMaterialf(GL_FRONT, GL_SHININESS, 50.0)
+    # Material properties are now handled automatically by the OpenGLPrimitivesWrapper
+    # using the Material assigned to the sphere
 
 
     while not glfw.window_should_close(window):

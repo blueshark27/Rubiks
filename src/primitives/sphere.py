@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from src.datatypes.pose import Pose
 from src.datatypes.scaling import Scaling
+from src.datatypes.material import Material
 from src.primitives.base_scene_object import MeshPrimitive, BaseSceneObject
 
 # This is a Python implementation of an icosphere, which is a type of sphere made up of triangles.
@@ -14,11 +15,14 @@ class Sphere(BaseSceneObject):
                  radius: float = 1.0,
                  subdivision: int = 3,
                  scaling: Optional[Scaling] = None,
+                 material: Optional[Material] = None,
+                 color: Optional[List[float]] = None,
                  name: str = "Sphere",
                  parent: Optional['Sphere'] = None):
         if scaling is None:
             scaling = Scaling(x=1.0, y=1.0, z=1.0)
-        super().__init__(name=name, pose=pose, scaling=scaling, parent=parent)
+        super().__init__(name=name, pose=pose, scaling=scaling,
+                         material=material, color=color, parent=parent)
         self.radius = radius
         self.subdivision = subdivision
         self.mesh_primitives = list()
