@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Dict
 import numpy as np
+import warnings
 
 from src.datatypes.pose import Pose
 
@@ -18,6 +19,11 @@ class SceneObject(ABC):
         self._world_transform_dirty = True
         self._local_transform_cache = None
         self._world_transform_cache = None
+
+        # Performance monitoring
+        self._cache_hits = 0
+        self._cache_misses = 0
+        self._depth_warning_threshold = 15  # Warn if hierarchy exceeds this depth
 
         # Set parent if provided (uses set_parent to maintain consistency)
         if parent is not None:
@@ -164,6 +170,7 @@ class SceneObject(ABC):
             4x4 world transformation matrix
         """
         if self._world_transform_dirty:
+            self._cache_misses += 1
             local = self.get_local_transform()
 
             if self.parent is None:
@@ -174,6 +181,158 @@ class SceneObject(ABC):
                 parent_world = self.parent.get_world_transform()
                 self._world_transform_cache = parent_world @ local
 
+                # Check hierarchy depth and warn if too deep
+                depth = self.get_depth()
+                if depth > self._depth_warning_threshold:
+                    warnings.warn(
+                        f"Deep hierarchy detected: '{self.name}' is at depth {depth}. "
+                        f"Consider restructuring for better performance.",
+                        UserWarning,
+                        stacklevel=2
+                    )
+
             self._world_transform_dirty = False
+        else:
+            self._cache_hits += 1
 
         return self._world_transform_cache
+
+    # ===== Optimization & Monitoring Methods =====
+
+    def get_depth(self) -> int:
+        """
+        Get the depth of this object in the hierarchy.
+
+        Returns:
+            Depth (0 for root, 1 for children of root, etc.)
+        """
+        depth = 0
+        current = self.parent
+        while current is not None:
+            depth += 1
+            current = current.get_parent()
+        return depth
+
+    def get_hierarchy_depth(self) -> int:
+        """
+        Get the maximum depth of the hierarchy below this object.
+
+        Returns:
+            Maximum depth of subtree (0 if no children)
+        """
+        if not self.children:
+            return 0
+
+        max_child_depth = 0
+        for child in self.children:
+            child_depth = child.get_hierarchy_depth()
+            max_child_depth = max(max_child_depth, child_depth)
+
+        return 1 + max_child_depth
+
+    def get_descendant_count(self) -> int:
+        """
+        Count total number of descendants (children, grandchildren, etc.).
+
+        Returns:
+            Total number of descendants
+        """
+        count = len(self.children)
+        for child in self.children:
+            count += child.get_descendant_count()
+        return count
+
+    def get_cache_statistics(self) -> Dict[str, int]:
+        """
+        Get cache performance statistics for this object.
+
+        Returns:
+            Dictionary with cache hits, misses, and hit rate
+        """
+        total = self._cache_hits + self._cache_misses
+        hit_rate = (self._cache_hits / total * 100) if total > 0 else 0.0
+
+        return {
+            'hits': self._cache_hits,
+            'misses': self._cache_misses,
+            'total': total,
+            'hit_rate_percent': hit_rate
+        }
+
+    def reset_cache_statistics(self):
+        """Reset cache performance counters."""
+        self._cache_hits = 0
+        self._cache_misses = 0
+
+    def get_hierarchy_statistics(self) -> Dict[str, int]:
+        """
+        Get comprehensive statistics about this hierarchy.
+
+        Returns:
+            Dictionary with depth, descendant count, and subtree depth
+        """
+        return {
+            'depth': self.get_depth(),
+            'descendants': self.get_descendant_count(),
+            'subtree_depth': self.get_hierarchy_depth(),
+            'children': len(self.children)
+        }
+
+    def print_hierarchy(self, indent: int = 0, show_stats: bool = False):
+        """
+        Print a visual representation of the hierarchy tree.
+
+        Args:
+            indent: Current indentation level (used for recursion)
+            show_stats: If True, show cache statistics for each node
+        """
+        prefix = "  " * indent
+        stats_str = ""
+
+        if show_stats:
+            cache_stats = self.get_cache_statistics()
+            stats_str = f" [cache: {cache_stats['hit_rate_percent']:.1f}% hits, depth: {self.get_depth()}]"
+
+        print(f"{prefix}{self.name}{stats_str}")
+
+        for child in self.children:
+            child.print_hierarchy(indent + 1, show_stats)
+
+    def validate_hierarchy(self) -> List[str]:
+        """
+        Validate the hierarchy and return a list of warnings/issues.
+
+        Returns:
+            List of warning messages (empty if no issues)
+        """
+        warnings_list = []
+
+        # Check depth
+        depth = self.get_depth()
+        if depth > self._depth_warning_threshold:
+            warnings_list.append(
+                f"Object '{self.name}' is at depth {depth} "
+                f"(threshold: {self._depth_warning_threshold})"
+            )
+
+        # Check for too many children (can impact iteration performance)
+        if len(self.children) > 100:
+            warnings_list.append(
+                f"Object '{self.name}' has {len(self.children)} children "
+                f"(consider grouping for better organization)"
+            )
+
+        # Recursively check children
+        for child in self.children:
+            warnings_list.extend(child.validate_hierarchy())
+
+        return warnings_list
+
+    def set_depth_warning_threshold(self, threshold: int):
+        """
+        Set the depth threshold for performance warnings.
+
+        Args:
+            threshold: Maximum depth before warning is issued
+        """
+        self._depth_warning_threshold = threshold
