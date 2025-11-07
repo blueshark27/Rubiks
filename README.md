@@ -8,6 +8,7 @@ A Python framework for 3D object hierarchies with parent-child transformations, 
 - **High Performance**: 140x speedup with intelligent transform caching
 - **Animation System**: Keyframe-based animations with smooth interpolation (SLERP)
 - **Quaternion Support**: Smooth rotations without gimbal lock
+- **Material System**: Phong lighting with 11+ realistic material presets (metals, gems, plastics)
 - **Collision Detection**: Bounding box computation and spatial queries
 - **Profiling Tools**: Performance monitoring and optimization recommendations
 - **3D Primitives**: Spheres, cylinders, cones with OpenGL rendering
@@ -30,6 +31,38 @@ pip install numpy PyOpenGL glfw pydantic numpydantic
 ```
 
 ## Quick Start
+
+### Creating Objects with Materials
+
+```python
+import numpy as np
+from src.primitives.sphere import Sphere
+from src.datatypes.pose import Pose
+from src.datatypes.material import Material, MaterialPresets
+
+# Create sphere with a simple color
+pose = Pose(
+    translation=np.array([[0], [0], [0]]),
+    rotation=np.array([[0], [0], [0]])
+)
+sphere1 = Sphere(pose=pose, radius=1.0, color=[1.0, 0.0, 0.0, 1.0])
+
+# Use a preset material
+sphere2 = Sphere(pose=pose, radius=1.0, material=MaterialPresets.gold())
+
+# Create custom material
+custom_material = Material(
+    ambient=[0.1, 0.0, 0.0, 1.0],
+    diffuse=[0.8, 0.0, 0.0, 1.0],
+    specular=[1.0, 1.0, 1.0, 1.0],
+    shininess=128.0
+)
+sphere3 = Sphere(pose=pose, radius=1.0, material=custom_material)
+
+# Change material dynamically
+sphere1.set_material(MaterialPresets.emerald())
+sphere1.set_color([0.0, 1.0, 0.0, 1.0])  # Or just change color
+```
 
 ### Basic Scene with Parent-Child Hierarchy
 
@@ -136,6 +169,12 @@ create_profiling_report(root_object, "My Scene")
 Run the included examples to see the framework in action:
 
 ```bash
+# Material system showcase - 9 spheres with different materials
+python -m examples.material_example
+
+# Basic sphere with material
+python -m examples.sphere_example
+
 # Basic hierarchy example
 python -m examples.hierarchy_example
 
@@ -259,12 +298,46 @@ q_mid = slerp(q1, q2, 0.5)  # Halfway between
 R = q.to_rotation_matrix()
 ```
 
+### 6. Materials
+
+Define visual appearance using the Phong reflection model:
+
+```python
+from src.datatypes.material import Material, MaterialPresets
+
+# Quick color materials
+material = Material.red()
+material = Material.blue()
+
+# Realistic presets
+material = MaterialPresets.gold()      # Metallic gold
+material = MaterialPresets.emerald()   # Gemstone
+material = MaterialPresets.chrome()    # Shiny metal
+
+# Custom material
+material = Material(
+    ambient=[0.2, 0.0, 0.0, 1.0],   # Base color in shadow
+    diffuse=[1.0, 0.0, 0.0, 1.0],   # Main surface color
+    specular=[0.5, 0.5, 0.5, 1.0],  # Highlight color
+    shininess=32.0                   # Highlight sharpness
+)
+
+# Easy color conversion
+material = Material.from_color([1.0, 0.5, 0.0, 1.0], shininess=64.0)
+
+# Available presets:
+# Metals: gold, silver, bronze, chrome
+# Gems: emerald, jade, ruby
+# Plastics: plastic_red, plastic_green, plastic_blue
+# Other: rubber_black
+```
+
 ## Testing
 
 Run the test suite to verify everything works:
 
 ```bash
-# All tests (146 tests)
+# All tests (177 tests)
 python -m unittest discover test -v
 
 # Specific test suites
@@ -273,10 +346,11 @@ python -m unittest test.test_transform -v       # Transform math tests
 python -m unittest test.test_quaternion -v      # Quaternion tests
 python -m unittest test.test_animation -v       # Animation tests
 python -m unittest test.test_bounding_box -v    # Collision tests
+python -m unittest test.test_material -v        # Material system tests (31 tests)
 python -m unittest test.test_performance -v     # Performance benchmarks
 ```
 
-Expected results: **145/146 tests passing** (1 pre-existing unrelated test)
+Expected results: **176/177 tests passing** (1 pre-existing unrelated test)
 
 ## Performance
 
@@ -329,12 +403,14 @@ src/
 │   ├── pose.py         # Pose and PoseQuat classes
 │   ├── quaternion.py   # Quaternion implementation
 │   ├── transform.py    # Transformation mathematics
-│   └── scaling.py      # Scaling data type
+│   ├── scaling.py      # Scaling data type
+│   └── material.py     # Material system (Phong lighting)
 ├── primitives/         # 3D primitive shapes
 │   ├── sphere.py       # Sphere primitive
 │   ├── cylinder.py     # Cylinder primitive
 │   ├── cone.py         # Cone primitive
-│   └── base_scene_object.py
+│   ├── base_scene_object.py
+│   └── opengl_primitives_wrapper.py  # OpenGL rendering
 ├── animation/          # Animation system
 │   └── animation.py    # Keyframes, clips, player
 ├── utils/              # Utilities
@@ -343,7 +419,7 @@ src/
 ├── scene_object.py     # Base class for all scene objects
 └── lights/             # Lighting system
 
-test/                   # Comprehensive test suite
+test/                   # Comprehensive test suite (177 tests)
 examples/               # Working examples
 ```
 
@@ -352,6 +428,8 @@ examples/               # Working examples
 - **`SceneObject`**: Base class with hierarchy support
 - **`Pose` / `PoseQuat`**: Position and rotation representation
 - **`Quaternion`**: Rotation mathematics
+- **`Material`**: Phong lighting properties (ambient, diffuse, specular, shininess)
+- **`MaterialPresets`**: Realistic material library (11+ presets)
 - **`Animation`**: Keyframe-based animation track
 - **`AnimationPlayer`**: Playback control
 - **`BoundingBox`**: Collision detection and spatial queries
@@ -360,6 +438,7 @@ examples/               # Working examples
 ## Documentation
 
 - **`IMPLEMENTATION_COMPLETE.md`**: Complete system overview
+- **`MATERIAL_SYSTEM_COMPLETE.md`**: Material system documentation
 - **`PHASE_1_COMPLETE.md`**: Core transform system
 - **`PHASE_2_COMPLETE.md`**: Rendering integration
 - **`PHASE_3_COMPLETE.md`**: Optimization tools
@@ -390,6 +469,12 @@ examples/               # Working examples
 - Bounding boxes
 - Collision detection
 
+### Phase 5: Materials ✅
+- Phong reflection model
+- Material presets (metals, gems, plastics)
+- Automatic OpenGL integration
+- Color convenience methods
+
 ## License
 
 [Your License Here]
@@ -412,7 +497,7 @@ Developed as a comprehensive 3D transformation and animation framework for Pytho
 ---
 
 **Status**: Production-ready ✅
-**Version**: 1.0
-**Tests**: 145/146 passing
+**Version**: 1.1
+**Tests**: 176/177 passing
 **Performance**: 140x speedup with caching
-**Features**: Complete hierarchical transformation and animation system
+**Features**: Complete hierarchical transformation, animation, and material system
