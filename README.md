@@ -12,6 +12,7 @@ A Python framework for 3D object hierarchies with parent-child transformations, 
 - **Collision Detection**: Bounding box computation and spatial queries
 - **Profiling Tools**: Performance monitoring and optimization recommendations
 - **3D Primitives**: Spheres, cylinders, cones with OpenGL rendering
+- **High-Level Rendering API**: Clean Scene/Renderer/Camera abstraction hiding OpenGL details
 
 ## Installation
 
@@ -31,6 +32,50 @@ pip install numpy PyOpenGL glfw pydantic numpydantic
 ```
 
 ## Quick Start
+
+### High-Level Rendering API (Recommended)
+
+The easiest way to get started - no OpenGL knowledge required:
+
+```python
+import numpy as np
+from src.rendering import Renderer, Scene, Camera
+from src.primitives.sphere import Sphere
+from src.datatypes.pose import Pose
+from src.datatypes.material import MaterialPresets
+from src.lights.spotlight import Spotlight
+from src.lights.base_light import LightPrimitive
+
+# Create renderer and scene
+renderer = Renderer(width=800, height=600, title="My App")
+scene = Scene()
+camera = Camera.perspective(fov=45, position=[2, 2, 2], look_at=[0, 0, 0])
+
+# Create and add objects
+pose = Pose(translation=np.array([[0], [0], [0]]), rotation=np.array([[0], [0], [0]]))
+sphere = Sphere(pose=pose, radius=1.0, material=MaterialPresets.gold())
+scene.add(sphere)
+
+# Add lighting
+light_pose = Pose(translation=np.array([[3], [3], [3]]), rotation=np.array([[0], [0], [0]]))
+light = Spotlight(
+    light_type=LightPrimitive.SPOT,
+    diffuse=[1.0, 1.0, 1.0, 1.0],
+    pose=light_pose
+)
+scene.add_light(light)
+
+# Optional: Animation callback
+def update(delta_time):
+    # Update your objects here
+    pass
+
+# Render!
+renderer.run(scene, camera, update_callback=update)
+renderer.close()
+```
+
+**That's it!** No OpenGL commands needed - the framework handles everything.
 
 ### Creating Objects with Materials
 
@@ -169,6 +214,12 @@ create_profiling_report(root_object, "My Scene")
 Run the included examples to see the framework in action:
 
 ```bash
+# High-level rendering API - Simple and clean (RECOMMENDED)
+python -m examples.high_level_api_example
+
+# Advanced rendering - Hierarchy, multiple lights, camera orbiting
+python -m examples.advanced_rendering_example
+
 # Material system showcase - 9 spheres with different materials
 python -m examples.material_example
 
@@ -399,6 +450,10 @@ Expected results: **176/177 tests passing** (1 pre-existing unrelated test)
 
 ```
 src/
+├── rendering/          # High-level rendering API
+│   ├── renderer.py     # Window and render loop management
+│   ├── scene.py        # Scene graph container
+│   └── camera.py       # Camera abstraction
 ├── datatypes/          # Core data types
 │   ├── pose.py         # Pose and PoseQuat classes
 │   ├── quaternion.py   # Quaternion implementation
@@ -425,13 +480,23 @@ examples/               # Working examples
 
 ### Key Classes
 
+**Rendering (High-Level API):**
+- **`Renderer`**: Window management and render loop
+- **`Scene`**: Container for objects and lights
+- **`Camera`**: View and projection abstraction
+
+**Core:**
 - **`SceneObject`**: Base class with hierarchy support
 - **`Pose` / `PoseQuat`**: Position and rotation representation
 - **`Quaternion`**: Rotation mathematics
 - **`Material`**: Phong lighting properties (ambient, diffuse, specular, shininess)
 - **`MaterialPresets`**: Realistic material library (11+ presets)
+
+**Animation:**
 - **`Animation`**: Keyframe-based animation track
 - **`AnimationPlayer`**: Playback control
+
+**Utilities:**
 - **`BoundingBox`**: Collision detection and spatial queries
 - **`HierarchyProfiler`**: Performance analysis
 

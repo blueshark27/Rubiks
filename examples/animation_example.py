@@ -67,6 +67,7 @@ def main():
 
     # Configure OpenGL
     glEnable(GL_DEPTH_TEST)
+    glEnable(GL_LIGHTING)
     glClearColor(0.1, 0.1, 0.15, 1.0)
 
     # Set up projection
@@ -81,14 +82,15 @@ def main():
         rotation=np.array([[0], [0], [0]])
     )
     spotlight = Spotlight(
+        light_type=LightPrimitive.SPOT,
         pose=spotlight_pose,
         name="Spotlight",
-        ambient=[0.2, 0.2, 0.2, 1.0],
         diffuse=[0.8, 0.8, 0.8, 1.0],
-        specular=[1.0, 1.0, 1.0, 1.0]
+        spot_cutoff=45.0,
+        spot_exponent=2.0
     )
-    light_wrapper = OpenGLLightWrapper(spotlight, LightPrimitive.LIGHT0)
-    light_wrapper.enable_light()
+    light_wrapper = OpenGLLightWrapper(spotlight, index=0)
+    light_wrapper.setup_lighting()
 
     # Create initial poses
     sun_init_pose = Pose(
